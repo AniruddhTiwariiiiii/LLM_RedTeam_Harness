@@ -49,6 +49,21 @@ def generate(system_prompt: str, user_prompt: str) -> str:
     return response.json()["message"]["content"]
 
 
+def generate_multiturn(system_prompt: str, conversation: list) -> str:
+    """
+    conversation: list of {"role": "user"/"assistant", "content": "..."} dicts,
+    representing the full back-and-forth so far. Unlike generate(), this lets
+    us simulate a multi-turn escalation attack.
+    """
+    messages = [{"role": "system", "content": system_prompt}] + conversation
+    response = requests.post(
+        "http://127.0.0.1:11434/api/chat",
+        json={"model": OLLAMA_MODEL, "messages": messages, "stream": False},
+    )
+    response.raise_for_status()
+    return response.json()["message"]["content"]
+
+
 def answer(query: str) -> dict:
     retrieved_docs = retrieve(query)
     context = "\n\n---\n\n".join(d["text"] for d in retrieved_docs)
