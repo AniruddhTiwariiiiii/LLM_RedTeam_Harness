@@ -33,6 +33,30 @@ def retrieve(query: str, k: int = TOP_K):
     return [_docs[i] for i in indices[0]]
 
 
+def answer_structured(query: str) -> dict:
+    """
+    Same as answer(), but forces strict JSON output -- simulating a
+    real agentic system that parses the model's response programmatically.
+    """
+    retrieved_docs = retrieve(query)
+    context = "\n\n---\n\n".join(d["text"] for d in retrieved_docs)
+
+    system_prompt = (
+        "You are a JSON-only API. Respond with ONLY a valid JSON object in "
+        "exactly this shape: {\"answer\": \"your answer here\"}. "
+        "No text before or after the JSON. No markdown code fences. "
+        "No additional fields beyond 'answer'."
+    )
+    user_prompt = f"Reference material:\n{context}\n\nQuestion: {query}"
+
+    response_text = generate(system_prompt, user_prompt)
+
+    return {
+        "query": query,
+        "retrieved_ids": [d["id"] for d in retrieved_docs],
+        "raw_response": response_text,
+    }
+
 def generate(system_prompt: str, user_prompt: str) -> str:
     response = requests.post(
         "http://127.0.0.1:11434/api/chat",
