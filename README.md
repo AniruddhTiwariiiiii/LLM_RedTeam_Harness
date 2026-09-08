@@ -1,4 +1,4 @@
-# LLM_RedTeam_Harness
+# LLM RedTeam Harness
 
 ## Setup
 
